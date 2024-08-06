@@ -3,9 +3,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import useSWR from 'swr'
 
 import { getSession, saveSessionToUserTable } from '~/api/session'
-import { Button, Text } from '~/components'
+import { Button, Container, Text } from '~/components'
 
-export default function Auth() {
+function Authentication() {
   const router = useRouter()
   const searchParams = useLocalSearchParams()
   const { error, isLoading } = useSWR<void, Error, ['sign-in', string | string[] | null]>(
@@ -40,7 +40,7 @@ export default function Auth() {
 
   if (error) {
     return (
-      <SafeAreaView>
+      <>
         <Text>{error.message}</Text>
         <Button
           onPress={() => {
@@ -51,20 +51,18 @@ export default function Auth() {
             Back to Sign In
           </Text>
         </Button>
-      </SafeAreaView>
+      </>
     )
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView>
-        <Text>Loading...</Text>
-      </SafeAreaView>
+      <Text>Loading...</Text>
     )
   }
 
   return (
-    <SafeAreaView>
+    <>
       <Text>Auth screen...</Text>
       <Button
         onPress={() => {
@@ -75,6 +73,16 @@ export default function Auth() {
           Back Home
         </Text>
       </Button>
-    </SafeAreaView>
+    </>
+  )
+}
+
+export default function Auth() {
+  return (
+    <Container>
+      <SafeAreaView>
+        <Authentication />
+      </SafeAreaView>
+    </Container>
   )
 }

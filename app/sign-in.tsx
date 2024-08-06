@@ -2,7 +2,7 @@ import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button, Text } from '~/components'
+import { Button, Column, Container, Text } from '~/components'
 
 function obtainAuthToken() {
   return new Promise<string>((resolve) => {
@@ -21,15 +21,19 @@ function obtainAuthToken() {
 
 export default function SignIn() {
   return (
-    <SafeAreaView>
-      <Button
-        fullWidth
-        onPress={async () => {
-          await obtainAuthToken()
-        }}
-      >
-        <Text>Login</Text>
-      </Button>
-    </SafeAreaView>
+    <Container>
+      <SafeAreaView>
+        <Column px={16}>
+          <Button
+            fullWidth
+            onPress={async () => {
+              await obtainAuthToken()
+            }}
+          >
+            <Text>Login</Text>
+          </Button>
+        </Column>
+      </SafeAreaView>
+    </Container>
   )
 }
