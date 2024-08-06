@@ -38,6 +38,7 @@ export default function RootLayout() {
           ),
           headerStyle: styles.header,
           headerTitleStyle: styles.title,
+          headerTitleAlign: 'center',
           headerLargeTitleStyle: styles.title,
         }}
       />
