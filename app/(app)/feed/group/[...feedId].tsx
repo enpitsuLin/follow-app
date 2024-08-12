@@ -9,7 +9,6 @@ import { UnreadFilter } from '~/components/unread-filter'
 import { commonStylesheet } from '~/theme/common'
 
 type PageLocalSearchParams = {
-  feedId: string[]
   title: string
   view: string
   backTitle: string
@@ -22,7 +21,7 @@ export default function Page() {
     feedId: feedIdList,
     title: headerTitle,
     backTitle: headerBackTitle,
-  } = useLocalSearchParams<PageLocalSearchParams>()
+  } = useLocalSearchParams<'/(app)/feed/group/[...feedId]', PageLocalSearchParams>()
 
   return (
     <>

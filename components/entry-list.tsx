@@ -124,7 +124,15 @@ function EntryItem({ entry }: EntryItemProps) {
         }}
       >
         <Link
-          href={`/feed/detail/${entry.id}?feedId=${feedIdList ? feedIdList.join(',') : feed.id}&title=${title}&view=${view}` as any}
+          href={{
+            pathname: '/feed/detail/[entryId]',
+            params: {
+              entryId: entry.id,
+              feedId: feedIdList ? feedIdList.join(',') : feed.id,
+              title,
+              view,
+            },
+          }}
           asChild
         >
           <Pressable onLongPress={() => {}}>
@@ -407,7 +415,15 @@ function EntryMedia({ entry, props, index }: Omit<EntryItemProps, 'props'> & { p
             .catch(console.error)
         }
         else {
-          router.push(`/feed/detail/${entry.id}?feedId=${feedIdList ? feedIdList.join(',') : entry.feedId}&title=${title}&view=${view}` as any)
+          router.push({
+            pathname: '/feed/detail/[entryId]',
+            params: {
+              entryId: entry.id,
+              feedId: feedIdList ? feedIdList.join(',') : entry.feedId,
+              title,
+              view,
+            },
+          })
         }
       }}
       style={isVideo ? {} : {

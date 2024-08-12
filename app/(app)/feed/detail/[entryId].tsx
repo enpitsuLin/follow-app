@@ -42,7 +42,7 @@ function LazyComponent({
 }
 
 export default function Page() {
-  const { entryId, feedId } = useLocalSearchParams<{ entryId: string, feedId: string }>()
+  const { entryId, feedId } = useLocalSearchParams<'/(app)/feed/detail/[entryId]', { feedId: string }>()
   const feedIdList = useMemo(() => feedId.split(','), [feedId])
   const { data: entryList } = useEntryList(feedIdList)
   const { theme } = useStyles()
