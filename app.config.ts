@@ -62,8 +62,6 @@ export default function app({ config }: ConfigContext): ExpoConfig {
         resizeMode: 'contain',
         backgroundColor: '#ffffff',
         dark: {
-          image: './assets/splash-dark.png',
-          resizeMode: 'contain',
           backgroundColor: '#111111',
         },
       },
@@ -87,8 +85,6 @@ export default function app({ config }: ConfigContext): ExpoConfig {
         resizeMode: 'contain',
         backgroundColor: '#ffffff',
         dark: {
-          image: './assets/splash-dark.png',
-          resizeMode: 'contain',
           backgroundColor: '#111111',
         },
       },

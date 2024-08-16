@@ -11,7 +11,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { useCallback, useEffect, useState } from 'react'
 import type { AppStateStatus } from 'react-native'
 import { AppState, Platform, StyleSheet } from 'react-native'
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, { interpolate, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { UnistylesRuntime, useStyles } from 'react-native-unistyles'
 import { SWRConfig } from 'swr'
@@ -34,13 +34,22 @@ SplashScreen.preventAutoHideAsync()
   .catch(console.error)
 
 function AnimatedSplashScreen(props: { children: React.ReactNode }) {
-  const animation = useSharedValue(1)
+  const animation = useSharedValue(0)
+
   const [isAppReady, setAppReady] = useState(false)
   const [isSplashAnimationComplete, setAnimationComplete] = useState(false)
+
+  const { theme } = useStyles()
 
   const onImageLoaded = useCallback(async () => {
     try {
       await SplashScreen.hideAsync()
+      await new Promise<void>((resolve) => {
+        animation.value = withDelay(500, withTiming(20, { duration: 1000 }, (finished) => {
+          if (finished)
+            runOnJS(resolve)()
+        }))
+      })
       // do other load stuff
     }
     catch {
@@ -49,7 +58,7 @@ function AnimatedSplashScreen(props: { children: React.ReactNode }) {
     finally {
       setAppReady(true)
       animation.value = withTiming(
-        0,
+        100,
         { duration: 1000 },
         (finished) => {
           if (finished) {
@@ -70,24 +79,31 @@ function AnimatedSplashScreen(props: { children: React.ReactNode }) {
       android: Constants.expoConfig!.android!.splash!.backgroundColor,
     })
 
-  const imageResizeMode = Platform.select({
-    ios: Constants.expoConfig!.ios!.splash!.resizeMode,
-    android: Constants.expoConfig!.android!.splash!.resizeMode,
-  }) as 'cover' | 'contain'
-
   const imageContainerStyle = useAnimatedStyle(() => ({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: imageContainerBackgroundColor,
-    opacity: animation.value,
+    opacity: interpolate(animation.value, [0, 20, 100], [1, 1, 0]),
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
   }))
 
   const imageStyle = useAnimatedStyle(() => ({
-    width: '100%',
-    height: '100%',
-    resizeMode: imageResizeMode ?? 'cover',
+    width: 132,
+    height: 132,
+    borderRadius: 132 / 4,
+    transform: [{ translateY: interpolate(animation.value, [0, 20, 100], [0, -50, -50]) }],
   }))
 
-  const sourceModuleId = UnistylesRuntime.colorScheme === 'dark' ? require('../assets/splash-dark.png') : require('../assets/splash.png')
+  const textStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    bottom: '50%',
+    fontSize: 36,
+    color: theme.colors.accentContrast,
+    fontWeight: 'bold',
+    opacity: interpolate(animation.value, [0, 20, 100], [0, 1, 0]),
+    transform: [{ translateY: 36 * 2 }],
+  }))
 
   return (
     <Animated.View style={{ flex: 1 }}>
@@ -99,10 +115,13 @@ function AnimatedSplashScreen(props: { children: React.ReactNode }) {
         >
           <Animated.Image
             style={imageStyle}
-            source={sourceModuleId}
+            source={require('~/assets/icon.png')}
             onLoad={onImageLoaded}
             fadeDuration={0}
           />
+
+          <Animated.Text style={textStyle}>Follow</Animated.Text>
+
         </Animated.View>
       )}
     </Animated.View>
