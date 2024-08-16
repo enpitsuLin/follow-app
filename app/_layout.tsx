@@ -1,6 +1,6 @@
 import '../theme/unistyles'
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
+import { DarkTheme, DefaultTheme, ThemeProvider, useTheme } from '@react-navigation/native'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import Constants from 'expo-constants'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
@@ -36,26 +36,31 @@ SplashScreen.preventAutoHideAsync()
 function AnimatedSplashScreen(props: { children: React.ReactNode }) {
   const animation = useSharedValue(0)
 
+  const [imageLoaded, setImageLoaded] = useState(false)
   const [isAppReady, setAppReady] = useState(false)
   const [isSplashAnimationComplete, setAnimationComplete] = useState(false)
 
-  const { theme } = useStyles()
+  const [fontLoaded, loadFontError] = useFonts({
+    'SNPro-Black': ('./font/sn-pro/SNPro-Black.otf'),
+    'SNPro-BlackItalic': ('./font/sn-pro/SNPro-BlackItalic.otf'),
+    'SNPro-Bold': ('./font/sn-pro/SNPro-Bold.otf'),
+    'SNPro-BoldItalic': ('./font/sn-pro/SNPro-BoldItalic.otf'),
+    'SNPro-Heavy': ('./font/sn-pro/SNPro-Heavy.otf'),
+    'SNPro-HeavyItalic': ('./font/sn-pro/SNPro-HeavyItalic.otf'),
+    'SNPro-Light': ('./font/sn-pro/SNPro-Light.otf'),
+    'SNPro-LightItalic': ('./font/sn-pro/SNPro-LightItalic.otf'),
+    'SNPro-Medium': ('./font/sn-pro/SNPro-Medium.otf'),
+    'SNPro-MediumItalic': ('./font/sn-pro/SNPro-MediumItalic.otf'),
+    'SNPro-Regular': ('./font/sn-pro/SNPro-Regular.otf'),
+    'SNPro-RegularItalic': ('./font/sn-pro/SNPro-RegularItalic.otf'),
+    'SNPro-Semibold': ('./font/sn-pro/SNPro-Semibold.otf'),
+    'SNPro-SemiboldItalic': ('./font/sn-pro/SNPro-SemiboldItalic.otf'),
+    'SNPro-Thin': ('./font/sn-pro/SNPro-Thin.otf'),
+    'SNPro-ThinItalic': ('./font/sn-pro/SNPro-ThinItalic.otf'),
+  })
 
-  const onImageLoaded = useCallback(async () => {
-    try {
-      await SplashScreen.hideAsync()
-      await new Promise<void>((resolve) => {
-        animation.value = withDelay(500, withTiming(20, { duration: 1000 }, (finished) => {
-          if (finished)
-            runOnJS(resolve)()
-        }))
-      })
-      // do other load stuff
-    }
-    catch {
-      // handle errors
-    }
-    finally {
+  useEffect(() => {
+    if ((fontLoaded || loadFontError) && imageLoaded) {
       setAppReady(true)
       animation.value = withTiming(
         100,
@@ -66,6 +71,32 @@ function AnimatedSplashScreen(props: { children: React.ReactNode }) {
           }
         },
       )
+    }
+  }, [fontLoaded, loadFontError, imageLoaded])
+
+  const onImageLoad = useCallback(async () => {
+    try {
+      await SplashScreen.hideAsync()
+      await new Promise<void>((resolve) => {
+        animation.value = withDelay(
+          500,
+          withTiming(
+            20,
+            { duration: 1000 },
+            (finished) => {
+              if (finished)
+                runOnJS(resolve)()
+            },
+          ),
+        )
+      })
+      // do other load stuff
+    }
+    catch {
+      // handle errors
+    }
+    finally {
+      setImageLoaded(true)
     }
   }, [])
 
@@ -99,12 +130,11 @@ function AnimatedSplashScreen(props: { children: React.ReactNode }) {
     position: 'absolute',
     bottom: '50%',
     fontSize: 36,
-    color: theme.colors.accentContrast,
     fontWeight: 'bold',
     opacity: interpolate(animation.value, [0, 20, 100], [0, 1, 0]),
     transform: [{ translateY: 36 * 2 }],
   }))
-
+  const { colors } = useTheme()
   return (
     <Animated.View style={{ flex: 1 }}>
       {isAppReady && props.children}
@@ -116,11 +146,11 @@ function AnimatedSplashScreen(props: { children: React.ReactNode }) {
           <Animated.Image
             style={imageStyle}
             source={require('~/assets/icon.png')}
-            onLoad={onImageLoaded}
+            onLoad={onImageLoad}
             fadeDuration={0}
           />
 
-          <Animated.Text style={textStyle}>Follow</Animated.Text>
+          <Animated.Text style={[textStyle, { color: colors.text }]}>Follow</Animated.Text>
 
         </Animated.View>
       )}
@@ -139,36 +169,6 @@ function App() {
       void NavigationBar.setButtonStyleAsync(UnistylesRuntime.colorScheme === 'light' ? 'dark' : 'light')
     }
   }, [theme.colors.gray2])
-
-  const [fontLoaded, loadFontError] = useFonts({
-    'SNPro-Black': ('./font/sn-pro/SNPro-Black.otf'),
-    'SNPro-BlackItalic': ('./font/sn-pro/SNPro-BlackItalic.otf'),
-    'SNPro-Bold': ('./font/sn-pro/SNPro-Bold.otf'),
-    'SNPro-BoldItalic': ('./font/sn-pro/SNPro-BoldItalic.otf'),
-    'SNPro-Heavy': ('./font/sn-pro/SNPro-Heavy.otf'),
-    'SNPro-HeavyItalic': ('./font/sn-pro/SNPro-HeavyItalic.otf'),
-    'SNPro-Light': ('./font/sn-pro/SNPro-Light.otf'),
-    'SNPro-LightItalic': ('./font/sn-pro/SNPro-LightItalic.otf'),
-    'SNPro-Medium': ('./font/sn-pro/SNPro-Medium.otf'),
-    'SNPro-MediumItalic': ('./font/sn-pro/SNPro-MediumItalic.otf'),
-    'SNPro-Regular': ('./font/sn-pro/SNPro-Regular.otf'),
-    'SNPro-RegularItalic': ('./font/sn-pro/SNPro-RegularItalic.otf'),
-    'SNPro-Semibold': ('./font/sn-pro/SNPro-Semibold.otf'),
-    'SNPro-SemiboldItalic': ('./font/sn-pro/SNPro-SemiboldItalic.otf'),
-    'SNPro-Thin': ('./font/sn-pro/SNPro-Thin.otf'),
-    'SNPro-ThinItalic': ('./font/sn-pro/SNPro-ThinItalic.otf'),
-  })
-
-  useEffect(() => {
-    if (fontLoaded || loadFontError) {
-      SplashScreen.hideAsync()
-        .catch(console.error)
-    }
-  }, [fontLoaded, loadFontError])
-
-  if (!fontLoaded && !loadFontError) {
-    return null
-  }
 
   if (error) {
     return (
@@ -211,20 +211,20 @@ function App() {
         },
       }}
     >
-      <ThemeProvider
-        value={UnistylesRuntime.colorScheme === 'light' ? DefaultTheme : DarkTheme}
-      >
-        {__DEV__ && <DrizzleStudio />}
-        <Slot />
-      </ThemeProvider>
+      <Slot />
     </SWRConfig>
   )
 }
 
 export default function RootLayout() {
   return (
-    <AnimatedSplashScreen>
-      <App />
-    </AnimatedSplashScreen>
+    <ThemeProvider
+      value={UnistylesRuntime.colorScheme === 'light' ? DefaultTheme : DarkTheme}
+    >
+      {__DEV__ && <DrizzleStudio />}
+      <AnimatedSplashScreen>
+        <App />
+      </AnimatedSplashScreen>
+    </ThemeProvider>
   )
 }
