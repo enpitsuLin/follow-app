@@ -2,14 +2,16 @@ import '../theme/unistyles'
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
+import Constants from 'expo-constants'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import { useFonts } from 'expo-font'
 import * as NavigationBar from 'expo-navigation-bar'
 import { Slot } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { AppStateStatus } from 'react-native'
-import { AppState, Platform } from 'react-native'
+import { AppState, Platform, StyleSheet } from 'react-native'
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { UnistylesRuntime, useStyles } from 'react-native-unistyles'
 import { SWRConfig } from 'swr'
@@ -31,7 +33,83 @@ function DrizzleStudio() {
 SplashScreen.preventAutoHideAsync()
   .catch(console.error)
 
-export default function Root() {
+function AnimatedSplashScreen(props: { children: React.ReactNode }) {
+  const animation = useSharedValue(1)
+  const [isAppReady, setAppReady] = useState(false)
+  const [isSplashAnimationComplete, setAnimationComplete] = useState(false)
+
+  const onImageLoaded = useCallback(async () => {
+    try {
+      await SplashScreen.hideAsync()
+      // do other load stuff
+    }
+    catch {
+      // handle errors
+    }
+    finally {
+      setAppReady(true)
+      animation.value = withTiming(
+        0,
+        { duration: 1000 },
+        (finished) => {
+          if (finished) {
+            runOnJS(setAnimationComplete)(true)
+          }
+        },
+      )
+    }
+  }, [])
+
+  const imageContainerBackgroundColor = UnistylesRuntime.colorScheme === 'dark'
+    ? Platform.select({
+      ios: Constants.expoConfig!.ios!.splash!.dark!.backgroundColor,
+      android: Constants.expoConfig!.android!.splash!.dark!.backgroundColor,
+    })
+    : Platform.select({
+      ios: Constants.expoConfig!.ios!.splash!.backgroundColor,
+      android: Constants.expoConfig!.android!.splash!.backgroundColor,
+    })
+
+  const imageResizeMode = Platform.select({
+    ios: Constants.expoConfig!.ios!.splash!.resizeMode,
+    android: Constants.expoConfig!.android!.splash!.resizeMode,
+  }) as 'cover' | 'contain'
+
+  const imageContainerStyle = useAnimatedStyle(() => ({
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: imageContainerBackgroundColor,
+    opacity: animation.value,
+  }))
+
+  const imageStyle = useAnimatedStyle(() => ({
+    width: '100%',
+    height: '100%',
+    resizeMode: imageResizeMode ?? 'cover',
+  }))
+
+  const sourceModuleId = UnistylesRuntime.colorScheme === 'dark' ? require('../assets/splash-dark.png') : require('../assets/splash.png')
+
+  return (
+    <Animated.View style={{ flex: 1 }}>
+      {isAppReady && props.children}
+      {!isSplashAnimationComplete && (
+        <Animated.View
+          pointerEvents="none"
+          style={imageContainerStyle}
+        >
+          <Animated.Image
+            style={imageStyle}
+            source={sourceModuleId}
+            onLoad={onImageLoaded}
+            fadeDuration={0}
+          />
+        </Animated.View>
+      )}
+    </Animated.View>
+  )
+}
+
+function App() {
   const { success, error } = useMigrations(db, migrations)
   const { theme } = useStyles()
 
@@ -121,5 +199,13 @@ export default function Root() {
         <Slot />
       </ThemeProvider>
     </SWRConfig>
+  )
+}
+
+export default function RootLayout() {
+  return (
+    <AnimatedSplashScreen>
+      <App />
+    </AnimatedSplashScreen>
   )
 }
